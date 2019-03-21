@@ -130,18 +130,96 @@ class KnowledgeBase(object):
         # Implementation goes here
         # Not required for the extra credit assignment
 
+    def formatState(self, state):
+        out = "(" + str(state.predicate)
+        for term in state.terms:
+            out = out + " " + str(term)
+        out = out + ")"
+        return out
+
     def kb_explain(self, fact_or_rule):
         """
         Explain where the fact or rule comes from
-
         Args:
             fact_or_rule (Fact or Rule) - Fact or rule to be explained
-
         Returns:
             string explaining hierarchical support from other Facts and rules
         """
         ####################################################
         # Student code goes here
+        out = ""
+        if((fact_or_rule not in self.facts) and (fact_or_rule not in self.rules)):
+            if(isinstance(fact_or_rule, Fact)):
+                return("Fact is not in the KB")
+            elif(isinstance(fact_or_rule, Rule)):
+                return("Rule is not in the KB")
+            else: return        
+        else:
+            if isinstance(fact_or_rule, Fact):
+                fact = self._get_fact(fact_or_rule)
+                out = out + str(fact.name) + ": " + self.formatState(fact.statement) + "\n"
+                if(len(fact.supported_by) > 0):
+                    out = out + "  SUPPORTED BY"
+                    for s in fact.supported_by:
+                        for ss in s:
+                            if(ss.asserted == True): #if asserted, print ASSERTED
+                                if isinstance(s, Fact):
+                                    out = out + "\t" + str(s.name) + ": " + self.formatState(s.statement) + " ASSERTED\n"
+                
+                                elif isinstance(s, Rule):
+                                    leftStates = "("
+                                    for statement in s.lhs:
+                                        leftStates = leftStates + self.formatState(statement) + ","
+                                    leftStates = leftStates[:-1] + ")"
+                                    out = out + "\t" + str(s.name) + ": " + leftStates + " -> " + self.formatState(s.rhs) + " ASSERTED\n"
+                            
+                            else: #if not asserted, do not print ASSERTED
+                                if isinstance(s, Fact):
+                                    out = out + "\t" + str(s.name) + ": " + self.formatState(s.statement) + "\n"
+                
+                                elif isinstance(s, Rule):
+                                    leftStates = "("
+                                    for statement in s.lhs:
+                                        leftStates = leftStates + self.formatState(statement) + ","
+                                    leftStates = leftStates[:-1] + ")"
+                                    out = out + "\t" + str(s.name) + ": " + leftStates + " -> " + self.formatState(s.rhs) + "\n"                        
+                        
+                        
+            elif isinstance(fact_or_rule, Rule):
+                rule = self._get_rule(fact_or_rule)
+                leftStates = "("
+                for statement in rule.lhs:
+                    leftStates = leftStates + self.formatState(statement) + ","
+                leftStates = leftStates[:-1] + ")"
+                out = out + (str(rule.name) + ": " + leftStates + " -> " + self.formatState(rule.rhs) + "\n")
+                if(len(rule.supported_by) > 0):
+                    out = out + "  SUPPORTED BY"  
+                    for s in rule.supported_by:
+                        for ss in s:
+                            if(ss.asserted == True): #if asserted, print ASSERTED
+                                if isinstance(s, Fact):
+                                    out = out + "\t" + str(s.name) + self.formatState(s.statement) + " ASSERTED\n"
+                
+                                elif isinstance(s, Rule):
+                                    leftStates = "("
+                                    for statement in s.lhs:
+                                        leftStates = leftStates + self.formatState(statement) + ","
+                                    leftStates = leftStates[:-1] + ")"
+                                    out = out + "\t" + str(s.name) + leftStates + " -> " + self.formatState(s.rhs) + " ASSERTED\n"
+                            
+                            else: #if not asserted, do not print ASSERTED
+                                if isinstance(s, Fact):
+                                    out = out + "\t" + str(s.name) + self.formatState(s.statement) + "\n"
+                
+                                elif isinstance(s, Rule):
+                                    leftStates = "("
+                                    for statement in s.lhs:
+                                        leftStates = leftStates + self.formatState(statement) + ","
+                                    leftStates = leftStates[:-1] + ")"
+                                    out = out + "\t" + str(s.name) + leftStates + " -> " + self.formatState(s.rhs) + "\n"                  
+        return out              
+        
+            
 
 
 class InferenceEngine(object):
